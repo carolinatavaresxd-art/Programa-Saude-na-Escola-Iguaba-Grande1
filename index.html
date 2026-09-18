@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Programa Saúde na Escola - Iguaba Grande</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Helvetica', 'Segoe UI', Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+    .tab-btn.active {
+      background-color: #ffffff;
+      color: #0369a1;
+      border-color: #e2e8f0;
+      border-bottom-color: transparent;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+    .month-btn.active {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+      border-color: #0284c7 !important;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background-color: #ffffff !important; }
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- CABEÇALHO AZUL GRADIENTE (MODO LEITURA PÚBLICA) -->
+    <header class="bg-gradient-to-r from-blue-950 via-indigo-950 to-slate-950 text-white rounded-2xl p-4 md:px-6 md:py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-blue-800/40">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-12 rounded-xl bg-blue-800/60 border border-blue-500/30 flex items-center justify-center text-white text-2xl shadow-inner flex-shrink-0">
+          <i class="fas fa-notes-medical"></i>
+        </div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-black tracking-tight text-white">Programa Saúde na Escola - Iguaba Grande</h1>
+          <p class="text-xs text-blue-200/90 font-medium tracking-wide">Painel Dinâmico de Gestão, Monitoramento & Resguardo Técnico</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 no-print">
+        <button onclick="window.print()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition">
+          <i class="fas fa-print text-xs"></i> Imprimir Relatório (A4)
+        </button>
+        <button onclick="exportarCSV()" class="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 text-white border border-slate-600/60 px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition">
+          <i class="fas fa-file-csv text-xs"></i> Exportar CSV
+        </button>
+      </div>
+    </header>
+
+    <!-- NAVEGAÇÃO POR ABAS -->
+    <nav class="flex flex-wrap gap-2 border-b border-slate-200 pb-1 no-print">
+      <button onclick="trocarAba('aba-monitoramento')" id="btn-aba-monitoramento" class="tab-btn px-4 py-2.5 rounded-t-xl font-bold text-xs text-slate-600 bg-slate-100 border border-transparent transition flex items-center gap-2 active">
+        <i class="fas fa-chart-pie"></i> 1. Monitoramento Local
+      </button>
+      <button onclick="trocarAba('aba-censo')" id="btn-aba-censo" class="tab-btn px-4 py-2.5 rounded-t-xl font-bold text-xs text-slate-600 bg-slate-100 border border-transparent transition flex items-center gap-2">
+        <i class="fas fa-users"></i> 2. Censo Demográfico & Temas
+      </button>
+      <button onclick="trocarAba('aba-cronograma')" id="btn-aba-cronograma" class="tab-btn px-4 py-2.5 rounded-t-xl font-bold text-xs text-slate-600 bg-slate-100 border border-transparent transition flex items-center gap-2">
+        <i class="fas fa-calendar-alt"></i> 3. Cronograma Mensal (Diário de Bordo)
+      </button>
+      <button onclick="trocarAba('aba-resguardo')" id="btn-aba-resguardo" class="tab-btn px-4 py-2.5 rounded-t-xl font-bold text-xs text-slate-600 bg-slate-100 border border-transparent transition flex items-center gap-2">
+        <i class="fas fa-shield-alt"></i> 4. Barreiras & Resguardo Técnico
+      </button>
+    </nav>
+
+    <!-- SUMÁRIO EXECUTIVO -->
+    <div class="bg-white border-l-4 border-emerald-500 rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Sumário Executivo Oficial</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Instrumento técnico formal de perfil de georreferenciamento, censo e cobertura clínica para respaldo institucional do PSE.</p>
+      </div>
+      <div class="flex items-center gap-2 self-start md:self-auto bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full text-[11px] font-bold">
+        <i class="fas fa-circle-check text-emerald-600"></i> Base de Dados Validada
+      </div>
+    </div>
+
+    <!-- 4 CARDS DE INDICADORES (KPIS) -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">Alunos Validados</span>
+          <div class="text-2xl font-black text-slate-800 mt-0.5" id="kpi-alunos">6.270</div>
+          <span class="text-[11px] text-emerald-600 font-semibold" id="kpi-genero">3.216 ♂️ • 3.054 ♀️</span>
+        </div>
+        <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+          <i class="fas fa-user-check"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">Escolas Atendidas</span>
+          <div class="text-2xl font-black text-slate-800 mt-0.5" id="kpi-escolas">22</div>
+          <span class="text-[11px] text-blue-600 font-semibold">17 Pactuadas • 5 Livres</span>
+        </div>
+        <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+          <i class="fas fa-school"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">Adesão / Cobertura</span>
+          <div class="text-2xl font-black text-emerald-600 mt-0.5" id="kpi-cobertura">81,8%</div>
+          <span class="text-[11px] text-slate-500 font-medium">10 Comp. • 8 Semi</span>
+        </div>
+        <div class="w-10 h-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-lg">
+          <i class="fas fa-shield-halved"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <span class="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">Avaliações Clínicas</span>
+          <div class="text-2xl font-black text-indigo-600 mt-0.5" id="kpi-avaliacoes">3.759 (60%)</div>
+          <span class="text-[11px] text-slate-500 font-medium">3.512 🦷 • 4.005 📏</span>
+        </div>
+        <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+          <i class="fas fa-file-medical"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 1: MONITORAMENTO LOCAL -->
+    <main id="aba-monitoramento" class="tab-conteudo space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Escolas por UBS Responsável (12 UBSs)</h3>
+          <p class="text-[11px] text-slate-400 mb-4">Mapeamento territorial das unidades de saúde vinculadas</p>
+          <div class="h-64"><canvas id="chartUBS"></canvas></div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Status Geral das Ações</h3>
+          <p class="text-[11px] text-slate-400 mb-4">Percentual de conclusão dos temas do PSE</p>
+          <div class="h-64"><canvas id="chartStatus"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Tabela Sem Botões de Edição -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Detalhamento das Escolas e Programações</h3>
+            <p class="text-[11px] text-slate-400">Relação completa das 22 unidades escolares atendidas</p>
+          </div>
+          <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Base Oficial Auditada</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">
+                <th class="py-3 px-3">INEP</th>
+                <th class="py-3 px-3">Unidade Escolar</th>
+                <th class="py-3 px-3">UBS Responsável</th>
+                <th class="py-3 px-3">Bairro</th>
+                <th class="py-3 px-3 text-center">Alunos (♂️ / ♀️)</th>
+                <th class="py-3 px-3 text-center">Avaliações Clínicas</th>
+                <th class="py-3 px-3 text-center">Status</th>
+                <th class="py-3 px-3 text-center">Tipo</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-escolas" class="divide-y divide-slate-100 text-xs text-slate-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ABA 2: CENSO DEMOGRÁFICO & TEMAS -->
+    <main id="aba-censo" class="tab-conteudo space-y-6 hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Distribuição Consolidada de Faixas Etárias</h3>
+          <p class="text-[11px] text-slate-400 mb-4">Censo etário em conformidade com as diretrizes do Ministério da Saúde</p>
+          <div class="h-64"><canvas id="chartIdades"></canvas></div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Gráfico de Cobertura por Temática de Saúde</h3>
+          <p class="text-[11px] text-slate-400 mb-4">Número exato de escolas com ações registradas em cada eixo</p>
+          <div class="h-64"><canvas id="chartTemas"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Matriz de Temas -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Matriz de Cobertura de Temas de Saúde</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="flex items-center justify-between mb-1">
+              <strong class="text-slate-800">Combate ao Aedes / Ambiental</strong>
+              <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">COMPLETA</span>
+            </div>
+            <p class="text-slate-500 text-[11px]">Cobertura em 18 escolas com forte engajamento comunitário.</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="flex items-center justify-between mb-1">
+              <strong class="text-slate-800">Alimentação & Saúde Bucal</strong>
+              <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">COMPLETA</span>
+            </div>
+            <p class="text-slate-500 text-[11px]">Realização regular de escovação supervisionada e pesagem.</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div class="flex items-center justify-between mb-1">
+              <strong class="text-slate-800">Cultura da Paz / Anti-Bullying</strong>
+              <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">COMPLETA</span>
+            </div>
+            <p class="text-slate-500 text-[11px]">Oficinas preventivas em turmas de Ensino Fundamental.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ABA 3: CRONOGRAMA MENSAL (DIÁRIO DE BORDO) -->
+    <main id="aba-cronograma" class="tab-conteudo space-y-6 hidden">
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Cronograma de Ações e Diário de Bordo</h3>
+            <p class="text-[11px] text-slate-400">Filtre pelos meses letivos para consultar os registros de campo e intercorrências</p>
+          </div>
+          <div class="flex flex-wrap gap-1" id="botoes-meses">
+            <button onclick="filtrarMes('Todos')" class="month-btn active px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 transition">Todos</button>
+            <button onclick="filtrarMes('Março')" class="month-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 transition">Mar</button>
+            <button onclick="filtrarMes('Abril')" class="month-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 transition">Abr</button>
+            <button onclick="filtrarMes('Maio')" class="month-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 transition">Mai</button>
+            <button onclick="filtrarMes('Junho')" class="month-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 transition">Jun</button>
+            <button onclick="filtrarMes('Julho')" class="month-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 transition">Jul</button>
+            <button onclick="filtrarMes('Agosto')" class="month-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 transition">Ago</button>
+            <button onclick="filtrarMes('Setembro')" class="month-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 transition">Set</button>
+            <button onclick="filtrarMes('Outubro')" class="month-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 transition">Out</button>
+          </div>
+        </div>
+
+        <!-- Métricas do Mês -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Crianças no Mês</span>
+            <div class="text-lg font-black text-slate-800 mt-0.5" id="mes-kpi-alunos">0</div>
+          </div>
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Escolas Visitadas</span>
+            <div class="text-lg font-black text-slate-800 mt-0.5" id="mes-kpi-escolas">0</div>
+          </div>
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Odonto 🦷</span>
+            <div class="text-lg font-black text-indigo-700 mt-0.5" id="mes-kpi-odonto">0</div>
+          </div>
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Nutrição 📏</span>
+            <div class="text-lg font-black text-amber-700 mt-0.5" id="mes-kpi-nutri">0</div>
+          </div>
+        </div>
+
+        <!-- Relatório de Entraves e Ocorrências -->
+        <div class="p-4 bg-amber-50/50 border border-amber-200 rounded-xl space-y-2">
+          <span class="text-xs font-bold text-amber-900 uppercase block flex items-center gap-2">
+            <i class="fas fa-exclamation-triangle text-amber-600"></i> Ocorrências e Desafios de Campo Registrados
+          </span>
+          <div id="mes-desafios-container" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ABA 4: RESGUARDO TÉCNICO -->
+    <main id="aba-resguardo" class="tab-conteudo space-y-6 hidden">
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div class="border-b border-slate-100 pb-3">
+          <h3 class="text-xs font-bold text-rose-700 uppercase tracking-wider flex items-center gap-2">
+            <i class="fas fa-shield-alt"></i> Diagnóstico de Dificuldades Operacionais (Resguardo de Gestão)
+          </h3>
+          <p class="text-xs text-slate-500 mt-1">Instrumento administrativo de isenção de responsabilidade técnica perante órgãos de fiscalização.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600 leading-relaxed">
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <strong class="text-slate-800 block mb-1">1. Infraestrutura e Insumos Básicos:</strong>
+            Escassez crônica de insumos de escritório (resmas de papel para impressão de materiais e fichas). Materiais lúdicos adquiridos pela coordenação com recursos próprios. Falta de transporte exclusivo para atendimento dos 12 territórios.
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <strong class="text-slate-800 block mb-1">2. Impasse Intersetorial no Modelo Vacinal:</strong>
+            Exigência da Educação de presença física obrigatória dos responsáveis na vacinação escolar, impactando o alcance das metas pactuadas pelo Ministério da Saúde.
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <strong class="text-slate-800 block mb-1">3. Recursos Humanos e Adesão das Equipes:</strong>
+            Resistência pontual de profissionais de unidades de saúde parceiras para cumprimento dos cronogramas de palestras acordados na pactuação intersetorial.
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <strong class="text-slate-800 block mb-1">4. Bloqueio em Temáticas Sensíveis:</strong>
+            Dificuldades institucionais na abordagem dos temas de Saúde Sexual e Reprodutiva em turmas de Ensino Fundamental, demandando capacitações continuadas.
+          </div>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    const temasLista = [
+      "Ações de combate ao Aedes aegypti",
+      "Agravos Negligenciados",
+      "Alimentação saudável",
+      "Cidadania e direitos humanos",
+      "Dependência de tabaco, álcool e outras drogas",
+      "Prevenção da violência e promoção da cultura da paz",
+      "Saúde Ambiental",
+      "Saúde bucal",
+      "Saúde mental",
+      "Saúde sexual e reprodutiva",
+      "Semana saúde na escola"
+    ];
+
+    const escolas = [
+      { inep: "33028583", nome: "CIEP 457 DOUTOR JOSE ELIAS MELLO DOS SANTOS", ubs: "UBS CENTRO 2", bairro: "CENTRO", total: 253, m: 134, f: 119, odonto: 0, nutri: 80, status: "COMPLETA", tipo: "PACTUADA", mes: "Março", desafios: "Dificuldade na autorização presencial dos responsáveis para aplicação de vacinas.", temas: [0,1,2,6,7,8], idades: {1:0,2:0,3:0,4:0,5:0,6:15,7:25,8:30,9:35,10:35,11:30,12:25,13:20,14:18,15:10,16:5,17:5,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33028605", nome: "CE DOUTOR FRANCISCO DE PAULA PARANHOS", ubs: "UBS CENTRO 1", bairro: "CENTRO", total: 347, m: 162, f: 185, odonto: 0, nutri: 170, status: "COMPLETA", tipo: "PACTUADA", mes: "Abril", desafios: "Resistência de parte do corpo docente em ceder horário letivo para palestras de saúde sexual.", temas: [0,2,3,4,5,6,7,8,9], idades: {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:10,11:40,12:50,13:60,14:60,15:50,16:40,17:25,18:8,19:4,20:0,21:0,22:0} },
+      { inep: "33028630", nome: "EM DR ANTONIO RODRIGUES TEIXEIRA", ubs: "UBS UBÁS 1", bairro: "CIDADE NOVA", total: 371, m: 189, f: 182, odonto: 280, nutri: 257, status: "SEMI COMPLETA", tipo: "PACTUADA", mes: "Março", desafios: "Falta de impressões para questionários clínicos; material adquirido com recursos próprios.", temas: [0,2,6,7,8], idades: {1:0,2:0,3:0,4:30,5:45,6:50,7:55,8:60,9:60,10:50,11:21,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33028648", nome: "EM MARGARETH PINHEIRO FREIRE", ubs: "UBS NOVA IGUABA", bairro: "ARRASTÃO DAS PEDRAS", total: 95, m: 48, f: 47, odonto: 87, nutri: 85, status: "SEMI COMPLETA", tipo: "PACTUADA", mes: "Maio", desafios: "Transporte reduzido para deslocamento da equipe até a localidade.", temas: [0,2,6,7,8], idades: {1:0,2:0,3:0,4:10,5:15,6:20,7:20,8:15,9:10,10:5,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33028656", nome: "EM NARCISO MACEDO", ubs: "UBS SAPEATIBA", bairro: "SAPEATIBA MIRIM", total: 115, m: 58, f: 57, odonto: 101, nutri: 101, status: "COMPLETA", tipo: "PACTUADA", mes: "Abril", desafios: "Reagendamento pontual por evento de formação pedagógica.", temas: [0,1,2,5,6,7,8,10], idades: {1:0,2:0,3:0,4:15,5:20,6:20,7:20,8:15,9:15,10:10,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33028672", nome: "EM SAPEATIBA MIRIM", ubs: "UBS SAPEATIBA", bairro: "SAPEATIBA MIRIM", total: 320, m: 179, f: 141, odonto: 208, nutri: 259, status: "SEMI COMPLETA", tipo: "PACTUADA", mes: "Maio", desafios: "Sobrecarga na unidade básica gerando lentidão de lançamentos no e-SUS.", temas: [0,2,6,7,8], idades: {1:0,2:0,3:0,4:25,5:35,6:45,7:50,8:55,9:55,10:45,11:10,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33093849", nome: "EM PAULINO PINTO PINHEIRO FILHO", ubs: "UBS PEDREIRA", bairro: "PEDREIRA", total: 437, m: 217, f: 220, odonto: 346, nutri: 393, status: "COMPLETA", tipo: "PACTUADA", mes: "Junho", desafios: "Divisão de turmas em razão do espaço reduzido da sala clínica.", temas: [0,1,2,3,4,5,6,7,8,9,10], idades: {1:0,2:0,3:0,4:0,5:0,6:20,7:35,8:40,9:45,10:50,11:55,12:60,13:55,14:45,15:25,16:7,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33098344", nome: "EM THEREZINHA PEDROSA", ubs: "UBS CENTRO 1", bairro: "CENTRO", total: 420, m: 219, f: 201, odonto: 0, nutri: 302, status: "SEMI COMPLETA", tipo: "PACTUADA", mes: "Junho", desafios: "Ausência de cirurgião-dentista na data prevista.", temas: [0,2,6,7,8], idades: {1:0,2:0,3:0,4:35,5:45,6:60,7:65,8:70,9:75,10:60,11:10,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33119708", nome: "EM MARIA NAZARETH TEIXEIRA NEVES", ubs: "UBS BOA VISTA", bairro: "BOA VISTA", total: 231, m: 118, f: 113, odonto: 152, nutri: 169, status: "SEMI COMPLETA", tipo: "PACTUADA", mes: "Julho", desafios: "Chuva intensa reduziu a frequência estudantil no período da tarde.", temas: [0,1,2,6,7], idades: {1:0,2:0,3:0,4:20,5:25,6:35,7:40,8:40,9:40,10:25,11:6,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33125686", nome: "EM DEP CLAUDIO MOACYR DE AZEVEDO", ubs: "UBS IGUABA PEQUENA 2", bairro: "IGUABA PEQUENA", total: 373, m: 190, f: 183, odonto: 345, nutri: 325, status: "COMPLETA", tipo: "PACTUADA", mes: "Agosto", desafios: "Execução plena e excelente articulação intersetorial.", temas: [0,1,2,3,4,5,6,7,8,9,10], idades: {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:29,9:44,10:62,11:54,12:47,13:45,14:52,15:31,16:9,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33145539", nome: "CRECHE MUNICIPAL MARIA THEREZINHA DA COSTA PEDROSA", ubs: "UBS UBÁS 1", bairro: "CIDADE NOVA", total: 116, m: 63, f: 53, odonto: 0, nutri: 0, status: "INCOMPLETA", tipo: "PACTUADA", mes: "Setembro", desafios: "Cronograma suspenso temporariamente aguardando equipe de UBS.", temas: [], idades: {1:35,2:40,3:41,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33154503", nome: "EM ERNESTINA SOARES DE AZEVEDO", ubs: "UBS IGUABA PEQUENA 1", bairro: "IGUABA PEQUENA", total: 241, m: 123, f: 118, odonto: 197, nutri: 203, status: "SEMI COMPLETA", tipo: "PACTUADA", mes: "Agosto", desafios: "Atraso no retorno dos termos de assentimento dos responsáveis.", temas: [0,2,6,7,8], idades: {1:0,2:0,3:0,4:20,5:25,6:35,7:40,8:45,9:45,10:25,11:6,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33162875", nome: "EM NEREA ESTHER BATISTA ALCOFORADO NATIVIDADE", ubs: "UBS VILA NOVA", bairro: "VILA NOVA", total: 246, m: 125, f: 121, odonto: 154, nutri: 157, status: "COMPLETA", tipo: "PACTUADA", mes: "Setembro", desafios: "Aquisição de itens lúdicos custeada com recursos próprios.", temas: [0,1,2,5,6,7,8,10], idades: {1:0,2:0,3:0,4:0,5:0,6:20,7:30,8:35,9:40,10:45,11:35,12:25,13:10,14:6,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33176272", nome: "CRECHE MUNICIPAL ZENITH MOREIRA DA SILVA", ubs: "UBS IGUABA PEQUENA 2", bairro: "CANELLAS CITY", total: 92, m: 57, f: 35, odonto: 78, nutri: 78, status: "SEMI COMPLETA", tipo: "PACTUADA", mes: "Outubro", desafios: "Boa receptividade dos profissionais da creche.", temas: [0,2,6,7], idades: {1:28,2:32,3:32,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33176280", nome: "ESCOLA MUNICIPAL PREFEITO OSCAR BANDEIRA DO CARMO MAGALHAES", ubs: "UBS SÃO MIGUEL", bairro: "SAO MIGUEL", total: 437, m: 222, f: 215, odonto: 407, nutri: 373, status: "SEMI COMPLETA", tipo: "PACTUADA", mes: "Outubro", desafios: "Elevada adesão dos alunos matutinos e grande consumo de materiais.", temas: [0,1,2,6,7,8], idades: {1:0,2:0,3:0,4:35,5:45,6:60,7:65,8:70,9:75,10:65,11:22,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33186871", nome: "ESCOLA MUNICIPAL PROFESSORA MARIA LUCIA DE OLIVEIRA COSTA", ubs: "UBS CENTRO 2", bairro: "CENTRO", total: 528, m: 269, f: 259, odonto: 439, nutri: 200, status: "COMPLETA", tipo: "PACTUADA", mes: "Outubro", desafios: "Alcance das metas estabelecidas após reforço de visitas.", temas: [0,1,2,3,4,5,6,7,8,9,10], idades: {1:0,2:0,3:0,4:0,5:0,6:25,7:40,8:50,9:60,10:70,11:75,12:75,13:70,14:45,15:15,16:3,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33198500", nome: "Creche Mun. Ezilar Maria Rodrigues", ubs: "UBS VILA NOVA", bairro: "VILA NOVA", total: 100, m: 50, f: 50, odonto: 0, nutri: 0, status: "SEM REGISTRO", tipo: "NÃO PACT", mes: "Não Definido", desafios: "Aguardando definição de escala com a coordenação pedagógica.", temas: [], idades: {1:30,2:35,3:35,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33201536", nome: "E.M. Prof. Eliane dos Santos Tavares", ubs: "UBS VILA NOVA", bairro: "VILA NOVA", total: 132, m: 67, f: 65, odonto: 0, nutri: 110, status: "COMPLETA", tipo: "NÃO PACT", mes: "Agosto", desafios: "Avaliação nutricional finalizada; odonto pendente de remarcação.", temas: [0,1,2,5,6,7,8], idades: {1:0,2:0,3:0,4:12,5:18,6:22,7:24,8:24,9:20,10:12,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33201633", nome: "Creche Mun. Rosa Homobono", ubs: "UBS SÃO MIGUEL", bairro: "SAO MIGUEL", total: 100, m: 50, f: 50, odonto: 0, nutri: 0, status: "SEM REGISTRO", tipo: "NÃO PACT", mes: "Não Definido", desafios: "Sem registros de campo no período.", temas: [], idades: {1:30,2:35,3:35,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33204594", nome: "Creche Lucia Regina", ubs: "UBS SAPEATIBA", bairro: "SAPEATIBA", total: 100, m: 50, f: 50, odonto: 0, nutri: 0, status: "SEM REGISTRO", tipo: "NÃO PACT", mes: "Não Definido", desafios: "Sem registros de campo no período.", temas: [], idades: {1:30,2:35,3:35,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0} },
+      { inep: "33204616", nome: "E.M. Cívico Militar Sgto. PM Diego", ubs: "UBS UBÁS 2", bairro: "UBÁS", total: 579, m: 316, f: 263, odonto: 389, nutri: 389, status: "COMPLETA", tipo: "NÃO PACT", mes: "Setembro", desafios: "Ação conjunta concluída com êxito em todos os eixos.", temas: [0,1,2,3,4,5,6,7,8,9,10], idades: {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:20,11:65,12:85,13:95,14:100,15:90,16:70,17:40,18:10,19:4,20:0,21:0,22:0} },
+      { inep: "33218609", nome: "EM ALICE CANELLAS DA SILVEIRA", ubs: "UBS CENTRO 2", bairro: "SAO MIGUEL", total: 439, m: 222, f: 217, odonto: 329, nutri: 324, status: "COMPLETA", tipo: "PACTUADA", mes: "Março", desafios: "Alta densidade discente exigindo escalonamento de salas.", temas: [0,1,2,5,6,7,8,9], idades: {1:0,2:0,3:0,4:0,5:0,6:25,7:40,8:50,9:55,10:60,11:60,12:55,13:45,14:35,15:12,16:2,17:0,18:0,19:0,20:0,21:0,22:0} }
+    ];
+
+    let chartUBS, chartStatus, chartIdades, chartTemas;
+    let mesFiltroAtivo = "Todos";
+
+    function init() {
+      renderTabela();
+      initGraficos();
+      filtrarMes("Todos");
+    }
+
+    function trocarAba(abaId) {
+      document.querySelectorAll('.tab-conteudo').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      
+      document.getElementById(abaId).classList.remove('hidden');
+      document.getElementById(`btn-${abaId}`).classList.add('active');
+
+      if (abaId === 'aba-censo') {
+        chartIdades.resize();
+        chartTemas.resize();
+      } else if (abaId === 'aba-monitoramento') {
+        chartUBS.resize();
+        chartStatus.resize();
+      }
+    }
+
+    function renderTabela() {
+      const tbody = document.getElementById('tabela-escolas');
+      tbody.innerHTML = '';
+      escolas.forEach(e => {
+        const media = Math.round((e.odonto + e.nutri) / 2);
+        const perc = e.total > 0 ? Math.round((media / e.total) * 100) : 0;
+        
+        let badge = 'bg-slate-100 text-slate-600';
+        if (e.status === 'COMPLETA') badge = 'bg-emerald-100 text-emerald-800';
+        else if (e.status === 'SEMI COMPLETA') badge = 'bg-sky-100 text-sky-800';
+        else if (e.status === 'INCOMPLETA') badge = 'bg-amber-100 text-amber-800';
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100 whitespace-nowrap";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500">${e.inep}</td>
+          <td class="py-2.5 px-3 font-semibold text-slate-800">${e.nome}</td>
+          <td class="py-2.5 px-3">${e.ubs}</td>
+          <td class="py-2.5 px-3">${e.bairro}</td>
+          <td class="py-2.5 px-3 text-center font-medium">${e.total} <span class="text-[10px] text-slate-400">(${e.m} ♂️ / ${e.f} ♀️)</span></td>
+          <td class="py-2.5 px-3 text-center">
+            <span class="font-bold text-slate-800">Média: ${media} (${perc}%)</span>
+            <span class="block text-[10px] text-slate-400">${e.odonto} 🦷 • ${e.nutri} 📏</span>
+          </td>
+          <td class="py-2.5 px-3 text-center"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge}">${e.status}</span></td>
+          <td class="py-2.5 px-3 text-center font-semibold text-slate-500">${e.tipo}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filtrarMes(mes) {
+      mesFiltroAtivo = mes;
+      document.querySelectorAll('.month-btn').forEach(btn => {
+        if (btn.innerText.trim() === mes || (mes === 'Todos' && btn.innerText.trim() === 'Todos')) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      const filtradas = mes === "Todos" ? escolas : escolas.filter(e => e.mes === mes);
+      let al = 0, od = 0, nu = 0;
+      const desafios = [];
+
+      filtradas.forEach(e => {
+        al += Number(e.total) || 0;
+        od += Number(e.odonto) || 0;
+        nu += Number(e.nutri) || 0;
+        if (e.desafios && e.desafios.trim() !== "") {
+          desafios.push({ escola: e.nome, texto: e.desafios });
+        }
+      });
+
+      document.getElementById('mes-kpi-alunos').innerText = al.toLocaleString('pt-BR');
+      document.getElementById('mes-kpi-escolas').innerText = filtradas.length;
+      document.getElementById('mes-kpi-odonto').innerText = `${od.toLocaleString('pt-BR')} 🦷`;
+      document.getElementById('mes-kpi-nutri').innerText = `${nu.toLocaleString('pt-BR')} 📏`;
+
+      const containerDesafios = document.getElementById('mes-desafios-container');
+      containerDesafios.innerHTML = '';
+      if (desafios.length === 0) {
+        containerDesafios.innerHTML = '<span class="text-slate-400 italic">Nenhuma intercorrência operacional registrada para este período.</span>';
+      } else {
+        desafios.forEach(d => {
+          containerDesafios.innerHTML += `
+            <div class="p-2.5 bg-white rounded-lg border border-amber-200">
+              <strong class="text-amber-900 block font-bold mb-0.5">${d.escola}:</strong>
+              <span class="text-slate-600">${d.texto}</span>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function calcularFaixasEtarias() {
+      let f1 = 0, f2 = 0, f3 = 0, f4 = 0, f5 = 0, f6 = 0;
+      escolas.forEach(e => {
+        if (!e.idades) return;
+        f1 += (Number(e.idades[1])||0) + (Number(e.idades[2])||0) + (Number(e.idades[3])||0);
+        f2 += (Number(e.idades[4])||0) + (Number(e.idades[5])||0);
+        f3 += (Number(e.idades[6])||0) + (Number(e.idades[7])||0) + (Number(e.idades[8])||0) + (Number(e.idades[9])||0) + (Number(e.idades[10])||0);
+        f4 += (Number(e.idades[11])||0) + (Number(e.idades[12])||0) + (Number(e.idades[13])||0) + (Number(e.idades[14])||0);
+        f5 += (Number(e.idades[15])||0) + (Number(e.idades[16])||0) + (Number(e.idades[17])||0);
+        f6 += (Number(e.idades[18])||0) + (Number(e.idades[19])||0) + (Number(e.idades[20])||0) + (Number(e.idades[21])||0) + (Number(e.idades[22])||0);
+      });
+      return [f1, f2, f3, f4, f5, f6];
+    }
+
+    function calcularTemas() {
+      const contagem = new Array(temasLista.length).fill(0);
+      escolas.forEach(e => {
+        if (Array.isArray(e.temas)) {
+          e.temas.forEach(tIdx => {
+            if (contagem[tIdx] !== undefined) contagem[tIdx]++;
+          });
+        }
+      });
+      return contagem;
+    }
+
+    function initGraficos() {
+      chartUBS = new Chart(document.getElementById('chartUBS').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: ['UBS CENTRO 2', 'UBS SAPEATIBA', 'UBS VILA NOVA', 'UBS IGUABA PEQUENA 2', 'UBS SÃO MIGUEL', 'UBS UBÁS 1', 'UBS CENTRO 1', 'UBS PEDREIRA', 'UBS BOA VISTA', 'UBS NOVA IGUABA', 'UBS IGUABA PEQUENA 1', 'UBS UBÁS 2'],
+          datasets: [{
+            data: [3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 1],
+            backgroundColor: ['#f20c0c', '#f97316', '#10b981', '#06b6d4', '#ffff00', '#f59e0b', '#ef4444', '#6366f1', '#a855f7', '#d946ef', '#14b8a6', '#84cc16'],
+            borderRadius: 4
+          }]
+        },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { stepSize: 1 } } } }
+      });
+
+      chartStatus = new Chart(document.getElementById('chartStatus').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['COMPLETA (10)', 'SEMI COMPLETA (8)', 'INCOMPLETA (1)', 'SEM REGISTRO (3)'],
+          datasets: [{ data: [10, 8, 1, 3], backgroundColor: ['#10b981', '#0284c7', '#f59e0b', '#94a3b8'], borderWidth: 2, borderColor: '#fff' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
+
+      chartIdades = new Chart(document.getElementById('chartIdades').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: ['0 a 3 anos', '4 a 5 anos', '6 a 10 anos', '11 a 14 anos', '15 a 17 anos', '+18 anos'],
+          datasets: [{
+            data: calcularFaixasEtarias(),
+            backgroundColor: ['#02fab0', '#02b4fa', '#143a99', '#f03030', '#fa9519', '#a85ebd'],
+            borderRadius: 6
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      });
+
+      chartTemas = new Chart(document.getElementById('chartTemas').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: ['Combate ao Aedes', 'Agravos Negligenciados', 'Alimentação', 'Cidadania/DH', 'Drogas/Álcool', 'Violência/Paz', 'Saúde Ambiental', 'Saúde Bucal', 'Saúde Mental', 'Sexual/Reprodutiva', 'Semana Saúde Escola'],
+          datasets: [{
+            data: calcularTemas(),
+            backgroundColor: ['#f27f0c', '#f2d30c', '#c0f20c', '#60f20c', '#0cf287', '#0cf2ea', '#0c7bf2', '#1c0eb0', '#9d21db', '#e841da', '#fa4d6a'],
+            borderRadius: 4
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 22, ticks: { stepSize: 2 } } } }
+      });
+    }
+
+    function exportarCSV() {
+      let csv = 'INEP;Escola;UBS;Bairro;Mes;Total;Meninos;Meninas;Odonto;Nutri;Status;Tipo\n';
+      escolas.forEach(e => {
+        csv += `"${e.inep}";"${e.nome}";"${e.ubs}";"${e.bairro}";"${e.mes||''}";${e.total};${e.m};${e.f};${e.odonto};${e.nutri};"${e.status}";"${e.tipo}"\n`;
+      });
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pse_iguaba_escolas.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
